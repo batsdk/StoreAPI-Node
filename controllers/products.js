@@ -55,11 +55,13 @@ const getAllProducts = async (req, res) => {
 
     const regex = /\b(< | > | >= | <= | =)\b/g;
 
+    // Replacing < <= > etc.. with mongoose optings eg --> $gt insted >
     let filters = numericFilters.replace(
       regex,
       (match) => `-${operationMap[match]}-`
     );
 
+    // Options that has numericFilters
     const options = ["price", "rating"];
 
     filters = filters.split(",").forEach((item) => {
@@ -70,6 +72,8 @@ const getAllProducts = async (req, res) => {
       }
     });
   }
+
+  console.log(queryObject);
 
   const products = await result;
 
