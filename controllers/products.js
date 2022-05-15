@@ -5,7 +5,7 @@ const getAllProductsStatic = async (req, res) => {
   res.status(200).json({ products });
 };
 const getAllProducts = async (req, res) => {
-  const { featured, company, name, sort, field } = req.query;
+  const { featured, company, name, sort, field, numericFilters } = req.query;
   const queryObject = {};
 
   if (featured) {
@@ -41,6 +41,35 @@ const getAllProducts = async (req, res) => {
   const skip = (page - 1) * 10;
 
   result = result.skip(skip).limit(limit);
+
+  // Numeric Filters
+
+  if (numericFilters) {
+    const operationMap = {
+      ">": "$gt",
+      ">=": "$gte",
+      "<": "$lt",
+      "<=": "$lte",
+      "=": "$eq",
+    };
+
+    const regex = /\b(< | > | >= | <= | =)\b/g;
+
+    let filters = numericFilters.replace(
+      regex,
+      (match) => `-${operationMap[match]}-`
+    );
+
+    const options = ["price", "rating"];
+
+    filters = filters.split(",").forEach((item) => {
+      const [field, operator, value] = item.split("-");
+
+      if (options.includes(field)) {
+        queryObject[field] = { [operator]: Number(value) };
+      }
+    });
+  }
 
   const products = await result;
 
